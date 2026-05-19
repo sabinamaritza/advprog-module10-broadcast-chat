@@ -13,6 +13,10 @@ async fn handle_connection(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let mut bcast_rx = bcast_tx.subscribe();
 
+    ws_stream
+        .send(Message::text("Welcome to Chat Application!".to_string()))
+        .await?;
+
     loop {
         tokio::select! {
             incoming_msg = ws_stream.next() => {
@@ -44,7 +48,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let (bcast_tx, _) = channel(16);
 
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
-    println!("listening on port 8080");
+    println!("[server] listening on port 8080");
 
     loop {
         let (socket, addr) = listener.accept().await?;

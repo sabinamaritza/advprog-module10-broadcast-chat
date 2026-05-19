@@ -1,18 +1,21 @@
-use futures_util::stream::StreamExt;
-use futures_util::SinkExt;
+use futures_util::{stream::StreamExt, SinkExt};
 use http::Uri;
+use std::io::{self, Write};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_websockets::{ClientBuilder, Message};
 
 #[tokio::main]
 async fn main() -> Result<(), tokio_websockets::Error> {
-    let (mut ws_stream, _) =
-        ClientBuilder::from_uri(Uri::from_static("ws://127.0.0.1:8080"))
-            .connect()
-            .await?;
+    let (mut ws_stream, _) = ClientBuilder::from_uri(Uri::from_static("ws://127.0.0.1:8080"))
+        .connect()
+        .await?;
 
     let stdin = tokio::io::stdin();
     let mut stdin = BufReader::new(stdin).lines();
+
+    let mut current_input = String::new();
+    print!("> ");
+    io::stdout().flush().unwrap();
 
     loop {
         tokio::select! {
@@ -20,10 +23,17 @@ async fn main() -> Result<(), tokio_websockets::Error> {
                 match incoming_msg {
                     Some(Ok(msg)) if msg.is_text() => {
                         let Some(text) = msg.as_text() else { return Ok(()); };
-                        println!("Sabina's computer: {}", text);
+
+                        print!("\r\x1B[s");  // save cursor position
+                        print!("\x1B[K");    // clear line
+
+                        println!("Sabina's Computer - From Server: {}", text);
+
+                        print!("> {}", current_input);
+                        io::stdout().flush().unwrap();
                     }
                     Some(Ok(msg)) if msg.is_close() => {
-                        println!("Sabina's computer: server closed the connection");
+                        println!("Sabina's Computer - From Server: server closed the connection");
                         return Ok(());
                     }
                     Some(Ok(_)) => {},
@@ -31,10 +41,16 @@ async fn main() -> Result<(), tokio_websockets::Error> {
                     None => return Ok(()),
                 }
             }
-
             line = stdin.next_line() => {
                 match line {
-                    Ok(Some(line)) => ws_stream.send(Message::text(line.to_string())).await?,
+                    Ok(Some(line)) => {
+                        current_input.clear();
+
+                        ws_stream.send(Message::text(line)).await?;
+
+                        print!("> ");
+                        io::stdout().flush().unwrap();
+                    }
                     Ok(None) => return Ok(()),
                     Err(err) => return Err(err.into()),
                 }

@@ -15,7 +15,7 @@ pesan secara bersamaan tanpa harus membuat thread baru untuk setiap koneksi.
 
 <br>
 
-#### Experiment 2.2: Modifying Port
+#### Experiment 2.2: Modifying the Websocket Port
 
 ![experiment-2.2](img/experiment-2.2.png)
 
@@ -27,3 +27,19 @@ Selain itu, websocket protocol yang digunakan tetap sama yaitu `ws://`
 
 Perubahan port perlu dilakukan pada URL websocket server yang digunakan client dan juga binding
 address pada server. Eksperimen ini tidak mengubah pengiriman pesan antar client.
+
+<br>
+
+#### Experiment 2.3: Small Changes - Add IP and Port
+
+![experiment-2.3](img/experiment-2.3.png)
+
+Pada eksperimen ini di tambahkan informasi IP dan port pengirim pada setiap pesan chat.
+
+Modifikasi dilakukan agar setiap client dapat mengetahui siapa pengirim pesan tersebut. Informasi
+IP dan port diperoleh dari address koneksi websocket masing-masing client.
+
+Ketika client mengirim pesan, server menerima pesan tersebut lalu menambahkan informasi address 
+pengirim sebelum melakukan broadcast ke seluruh client lain.
+
+Hal ini membantu memahami bagaimana data dikirim dan diteruskan dalam sistem asynchronous websocket.
